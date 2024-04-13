@@ -1,6 +1,7 @@
 # CSC-322-SMV-Model
 
 Halle Koyanagi V00913278
+Wenzhe Shi V00968344
 
 ## Basic Part
 
