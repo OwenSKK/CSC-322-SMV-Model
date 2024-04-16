@@ -33,7 +33,7 @@ ASSIGN
   -- initially the token is granted to p0
   init(token) := 0;
 
-STRICT SEQUENCING
+-- STRICT SEQUENCING
 -- philosopher 0 can eat before philosopher 1, 2, 3, 4
 SPEC EF (p0.state = eating & E [ p0.state = eating U (!(p0.state = eating) & E [ !(p1.state = eating) U p0.state = eating ])]) 
 SPEC EF (p0.state = eating & E [ p0.state = eating U (!(p0.state = eating) & E [ !(p2.state = eating) U p0.state = eating ])]) 
@@ -118,7 +118,7 @@ ASSIGN
 
   next(token) := case
     (state=thinking) & appoint : (i + 1) mod 5; -- thinking with token
-    (state=done) & appoint : (i + 1) mod 5; pass to next (finished eating)
+    (state=done) & appoint : (i + 1) mod 5; -- pass to next (finished eating)
     TRUE : token;
   esac;
 
