@@ -32,7 +32,45 @@ ASSIGN
   init(chopsticks[4]) := nobody;
   -- initially the token is granted to p0
   init(token) := 0;
-    
+
+STRICT SEQUENCING
+-- philosopher 0 can eat before philosopher 1, 2, 3, 4
+SPEC EF (p0.state = eating & E [ p0.state = eating U (!(p0.state = eating) & E [ !(p1.state = eating) U p0.state = eating ])]) 
+SPEC EF (p0.state = eating & E [ p0.state = eating U (!(p0.state = eating) & E [ !(p2.state = eating) U p0.state = eating ])]) 
+SPEC EF (p0.state = eating & E [ p0.state = eating U (!(p0.state = eating) & E [ !(p3.state = eating) U p0.state = eating ])]) 
+SPEC EF (p0.state = eating & E [ p0.state = eating U (!(p0.state = eating) & E [ !(p4.state = eating) U p0.state = eating ])])
+
+-- philosopher 1 can eat before philosopher 0, 2, 3, 4
+SPEC EF (p1.state = eating & E [ p1.state = eating U (!(p1.state = eating) & E [ !(p2.state = eating) U p1.state = eating ])])
+SPEC EF (p1.state = eating & E [ p1.state = eating U (!(p1.state = eating) & E [ !(p3.state = eating) U p1.state = eating ])])
+SPEC EF (p1.state = eating & E [ p1.state = eating U (!(p1.state = eating) & E [ !(p4.state = eating) U p1.state = eating ])]) 
+SPEC EF (p1.state = eating & E [ p1.state = eating U (!(p1.state = eating) & E [ !(p0.state = eating) U p1.state = eating ])])
+
+-- philosopher 2 can eat before philosopher 0, 1, 3, 4
+SPEC EF (p2.state = eating & E [ p2.state = eating U (!(p2.state = eating) & E [ !(p3.state = eating) U p2.state = eating ])])
+SPEC EF (p2.state = eating & E [ p2.state = eating U (!(p2.state = eating) & E [ !(p4.state = eating) U p2.state = eating ])])
+SPEC EF (p2.state = eating & E [ p2.state = eating U (!(p2.state = eating) & E [ !(p0.state = eating) U p2.state = eating ])])
+SPEC EF (p2.state = eating & E [ p2.state = eating U (!(p2.state = eating) & E [ !(p1.state = eating) U p2.state = eating ])])
+
+-- philosopher 3 can eat before philosopher 0, 1, 2, 4
+SPEC EF (p3.state = eating & E [ p3.state = eating U (!(p3.state = eating) & E [ !(p4.state = eating) U p3.state = eating ])])
+SPEC EF (p3.state = eating & E [ p3.state = eating U (!(p3.state = eating) & E [ !(p0.state = eating) U p3.state = eating ])])
+SPEC EF (p3.state = eating & E [ p3.state = eating U (!(p3.state = eating) & E [ !(p1.state = eating) U p3.state = eating ])])
+SPEC EF (p3.state = eating & E [ p3.state = eating U (!(p3.state = eating) & E [ !(p2.state = eating) U p3.state = eating ])])
+
+-- philosopher 4 can eat before philosopher 0, 1, 2, 3
+SPEC EF (p4.state = eating & E [ p4.state = eating U (!(p4.state = eating) & E [ !(p0.state = eating) U p4.state = eating ])])
+SPEC EF (p4.state = eating & E [ p4.state = eating U (!(p4.state = eating) & E [ !(p1.state = eating) U p4.state = eating ])])
+SPEC EF (p4.state = eating & E [ p4.state = eating U (!(p4.state = eating) & E [ !(p2.state = eating) U p4.state = eating ])])
+SPEC EF (p4.state = eating & E [ p4.state = eating U (!(p4.state = eating) & E [ !(p3.state = eating) U p4.state = eating ])])
+
+-- CONCURRENT EATING
+SPEC EF ((p0.state=eating)&(p2.state=eating))
+SPEC EF ((p0.state=eating)&(p3.state=eating))
+SPEC EF ((p1.state=eating)&(p3.state=eating))
+SPEC EF ((p1.state=eating)&(p4.state=eating))
+SPEC EF ((p2.state=eating)&(p4.state=eating))
+
 MODULE philosopher(i,left,right,token)
   
 VAR
@@ -46,6 +84,7 @@ DEFINE
   gotright := (right=i);
   leftfree := (left=nobody);
   rightfree := (right=nobody);
+  appoint := (token = i);
     
 ASSIGN
   init(state) := thinking;
@@ -55,7 +94,7 @@ ASSIGN
     --
     -- if hungry and left chopstick if free, take it
     --
-    (state=hungry) & leftfree & (token=i) : i;
+    (state=hungry) & leftfree & (appoint | (token = (i+2) mod 5 | token = (i+3) mod 5)) : i;
     TRUE : left;
   esac;
 
@@ -64,7 +103,7 @@ ASSIGN
     --
     -- if hungry and have left chopstick and right is free, take it
     --
-    (state=hungry) & gotleft & rightfree & (token=i) : i; 
+    (state=hungry) & gotleft & rightfree & (appoint | (token = (i+2) mod 5 | token = (i+3) mod 5)) : i; 
     TRUE : right;
   esac;
 
@@ -78,7 +117,8 @@ ASSIGN
   esac;
 
   next(token) := case
-    (state=thinking) & (token=i) : (token + 1) mod 5; -- pass to the next
+    (state=thinking) & appoint : (i + 1) mod 5; -- thinking with token
+    (state=done) & appoint : (i + 1) mod 5; pass to next (finished eating)
     TRUE : token;
   esac;
 
