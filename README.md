@@ -4,6 +4,8 @@ Halle Koyanagi V00913278
 
 Wenzhe Shi V00968344
 
+Vyom Shah V00951024
+
 ## Basic Part
 
 ### Fairness
