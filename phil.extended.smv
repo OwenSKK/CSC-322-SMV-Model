@@ -11,7 +11,7 @@ MODULE main
   
 VAR
   chopsticks : array 0..4 of {nobody,0,1,2,3,4}; -- who holds the chopstick.
-  -- the token to eat
+  -- the 2 tokens to eat
   token1 : {0,1,2,3,4};
   token2 : {0,1,2,3,4};
   --
@@ -33,7 +33,7 @@ ASSIGN
   init(chopsticks[2]) := nobody;
   init(chopsticks[3]) := nobody;
   init(chopsticks[4]) := nobody;
-  -- initially the token is granted to p0
+  -- initially token1 is granted to p0 and token2 is granted to p2
   init(token1) := 0;
   init(token2) := 2;
 
@@ -99,7 +99,7 @@ ASSIGN
     --
     -- if hungry and left chopstick if free, take it
     --
-    (state=hungry) & leftfree & (hastoken1 | hastoken2) : i;
+    (state=hungry) & leftfree & (hastoken1 | hastoken2) : i; -- take chopstick if has either token
     TRUE : left;
   esac;
 
@@ -108,7 +108,7 @@ ASSIGN
     --
     -- if hungry and have left chopstick and right is free, take it
     --
-    (state=hungry) & gotleft & rightfree & (hastoken1 | hastoken2) : i; 
+    (state=hungry) & gotleft & rightfree & (hastoken1 | hastoken2) : i; -- take chopstick if has either token
     TRUE : right;
   esac;
 
@@ -122,14 +122,14 @@ ASSIGN
   esac;
 
   next(token1) := case
-    (state=thinking) & hastoken1 & token2 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- thinking with token
-    (state=done) & hastoken1 & token2 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- pass to next (finished eating)
+    (state=thinking) & hastoken1 & token2 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- thinking with token1 and passing wont make token next to token2
+    (state=done) & hastoken1 & token2 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- pass to next (finished eating) and passing wont make token next to token2
     TRUE : token1;
   esac;
 
   next(token2) := case
-    (state=thinking) & hastoken2 & token1 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- thinking with token
-    (state=done) & hastoken2 & token1 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- pass to next (finished eating)
+    (state=thinking) & hastoken2 & token1 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- thinking with token2 and passing wont make token next to token1
+    (state=done) & hastoken2 & token1 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- pass to next (finished eating) and passing wont make token next to token1
     TRUE : token2;
   esac;
 
