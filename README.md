@@ -8,6 +8,17 @@ Vyom Shah V00951024
 
 The Dining Philosopher is a common thought problem illustrating algorithm design for resource allocation, synchronization, and concurrency. Classically, this problem refers to forks and spaghetti with regards to an eating philosopher. In this project for clarity, we will refer to these objects as chopsticks and rice instead. Following, we outline two SMV source files that solve this problem – one sequential and one concurrent.
 
+## Execution
+
+The two files can be executed using NuSMV as follows:
+
+```smv
+NuSMV phil.smv
+NuSMV phil.extended.smv
+```
+
+both output the passed SPECs to stdout
+
 ## Basic Task
 
 The SMV source file called phil.smv is originally obtained as a prewritten faulty solution to be modified to assert and satisfy safety and liveness properties and to include fairness constraints. This solution will be sequential.
