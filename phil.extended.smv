@@ -12,16 +12,17 @@ MODULE main
 VAR
   chopsticks : array 0..4 of {nobody,0,1,2,3,4}; -- who holds the chopstick.
   -- the token to eat
-  token : {0,1,2,3,4};
+  token1 : {0,1,2,3,4};
+  token2 : {0,1,2,3,4};
   --
   -- Philosopher i has chopstick i on left and chopstick
   -- (i + 1) mod 5 on right
   --
-  p0 : process philosopher(0,chopsticks[0],chopsticks[1], token);
-  p1 : process philosopher(1,chopsticks[1],chopsticks[2], token);
-  p2 : process philosopher(2,chopsticks[2],chopsticks[3], token);
-  p3 : process philosopher(3,chopsticks[3],chopsticks[4], token);
-  p4 : process philosopher(4,chopsticks[4],chopsticks[0], token);
+  p0 : process philosopher(0,chopsticks[0],chopsticks[1], token1, token2);
+  p1 : process philosopher(1,chopsticks[1],chopsticks[2], token1, token2);
+  p2 : process philosopher(2,chopsticks[2],chopsticks[3], token1, token2);
+  p3 : process philosopher(3,chopsticks[3],chopsticks[4], token1, token2);
+  p4 : process philosopher(4,chopsticks[4],chopsticks[0], token1, token2);
   
 ASSIGN
   --
@@ -33,7 +34,8 @@ ASSIGN
   init(chopsticks[3]) := nobody;
   init(chopsticks[4]) := nobody;
   -- initially the token is granted to p0
-  init(token) := 0;
+  init(token1) := 0;
+  init(token2) := 2;
 
 -- STRICT SEQUENCING
 -- philosopher 0 can eat before philosopher 1, 2, 3, 4
@@ -73,7 +75,7 @@ SPEC EF ((p1.state=eating)&(p3.state=eating))
 SPEC EF ((p1.state=eating)&(p4.state=eating))
 SPEC EF ((p2.state=eating)&(p4.state=eating))
 
-MODULE philosopher(i,left,right,token)
+MODULE philosopher(i,left,right,token1,token2)
   
 VAR
   state : {thinking, hungry, eating, done};
@@ -86,7 +88,8 @@ DEFINE
   gotright := (right=i);
   leftfree := (left=nobody);
   rightfree := (right=nobody);
-  appoint := (token = i);
+  hastoken1 := (token1 = i);
+  hastoken2 := (token2 = i);
     
 ASSIGN
   init(state) := thinking;
@@ -96,7 +99,7 @@ ASSIGN
     --
     -- if hungry and left chopstick if free, take it
     --
-    (state=hungry) & leftfree & (appoint | (token = (i+2) mod 5 | token = (i+3) mod 5)) : i;
+    (state=hungry) & leftfree & (hastoken1 | hastoken2) : i;
     TRUE : left;
   esac;
 
@@ -105,7 +108,7 @@ ASSIGN
     --
     -- if hungry and have left chopstick and right is free, take it
     --
-    (state=hungry) & gotleft & rightfree & (appoint | (token = (i+2) mod 5 | token = (i+3) mod 5)) : i; 
+    (state=hungry) & gotleft & rightfree & (hastoken1 | hastoken2) : i; 
     TRUE : right;
   esac;
 
@@ -118,14 +121,22 @@ ASSIGN
     TRUE : state;
   esac;
 
-  next(token) := case
-    (state=thinking) & appoint : (i + 1) mod 5; -- thinking with token
-    (state=done) & appoint : (i + 1) mod 5; -- pass to next (finished eating)
-    TRUE : token;
+  next(token1) := case
+    (state=thinking) & hastoken1 & token2 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- thinking with token
+    (state=done) & hastoken1 & token2 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- pass to next (finished eating)
+    TRUE : token1;
+  esac;
+
+  next(token2) := case
+    (state=thinking) & hastoken2 & token1 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- thinking with token
+    (state=done) & hastoken2 & token1 != ((i + 1) mod 5 + 1): (i + 1) mod 5; -- pass to next (finished eating)
+    TRUE : token2;
   esac;
 
 
+
 -- add fairness constraints here
+
 FAIRNESS running;
 FAIRNESS state=hungry;
 
